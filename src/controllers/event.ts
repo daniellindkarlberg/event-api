@@ -18,7 +18,6 @@ enum SecondaryIndex {
   EVENT_META_INDEX = 'event-meta-index',
   EVENT_USER_INDEX = 'event-user-index',
 }
-
 export class EventController {
   async get(ctx: Context) {
     try {
@@ -48,11 +47,13 @@ export class EventController {
         },
       };
 
-      const {
-        Items: [items],
-      } = await db.query(params as QueryInput);
+      const { Items: items } = await db.query(params as QueryInput);
 
-      return response(ctx, StatusCodes.OK, items);
+      const event = items.find((item) => item.type === EntityType.EVENT) || ({} as Event);
+      const messages = items.filter((item) => item.type === EntityType.MESSAGE);
+      const guests = items.filter((item) => item.type === EntityType.USER);
+
+      return response(ctx, StatusCodes.OK, { ...event, messages, guests });
     } catch (error) {
       return errorResponse(ctx, error.statusCode);
     }
@@ -81,6 +82,7 @@ export class EventController {
     try {
       const { user_id, nickname, picture } = await auth0.getUser(userId);
       const id = `${EntityType.EVENT}-${uuidv4()}`;
+      const host = { id: user_id, nickname, picture };
       const params = {
         TableName,
         Item: {
@@ -90,20 +92,21 @@ export class EventController {
           gsi1sk: body.startDate,
           id,
           type: EntityType.EVENT,
-          host: { id: user_id, nickname, picture },
+          host,
           ...body,
         },
       };
 
       await db.put(params as PutItemInput);
 
-      return response(ctx, StatusCodes.OK, body);
+      return response(ctx, StatusCodes.OK, { id, host, ...body });
     } catch (error) {
       return errorResponse(ctx, error.statusCode);
     }
   }
 
   async update(ctx: Context, id: string, body: Event) {
+    // UPDATE EVENT META AND ALL GUESTS(GET EVENT BY ID AND UPDATE ALL GUESTS EVENT DATA)
     try {
       const params = {
         TableName,
@@ -123,9 +126,9 @@ export class EventController {
   }
 
   async upload(ctx: Context, id: string, file: File) {
+    // UPDATE EVENT META AND ALL GUESTS(GET EVENT BY ID AND UPDATE ALL GUESTS EVENT DATA)
     try {
       const url = await s3.upload(id, EntityType.EVENT, file);
-
       const params = {
         TableName,
         Key: {
@@ -140,7 +143,7 @@ export class EventController {
 
       await db.update(params as UpdateItemInput);
 
-      return response(ctx, StatusCodes.OK, url);
+      return response(ctx, StatusCodes.OK, { url });
     } catch (error) {
       return errorResponse(ctx, error.statusCode);
     }
@@ -163,7 +166,8 @@ export class EventController {
     }
   }
 
-  async addGuest(ctx: Context, userId: string, { id, title, description, imageUrl }: Event) {
+  async addGuest(ctx: Context, userId: string, { id, name, description, imageUrl }: Event) {
+    // GET USER AND ADD PROPERTIES FROM USER
     try {
       const params = {
         TableName,
@@ -173,7 +177,7 @@ export class EventController {
           gsi2pk: `user-${userId}`,
           type: EntityType.USER,
           id,
-          title,
+          name,
           description,
           imageUrl,
         },

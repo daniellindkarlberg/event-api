@@ -1,16 +1,20 @@
 import { User, Message, EntityType } from '.';
-
 export interface Event {
   id: string;
   type: EntityType.EVENT;
   host: Partial<User>;
-  title: string;
+  name: string;
   description: string;
   imageUrl: string;
-  long: number;
-  lat: number;
+  imagePositionTop: number;
+  location: EventLocation;
   startDate: number;
-  endDate: number;
+  endDate?: number;
   guests: Partial<User>[];
-  posts: Message[];
+  messages: Message[];
+}
+export interface EventLocation {
+  longitude: number;
+  latitude: number;
+  address: string;
 }

@@ -1,19 +1,21 @@
 import AWS from 'aws-sdk';
 import {
   DeleteItemInput,
-  GetItemInput,
   PutItemInput,
   QueryInput,
   UpdateItemInput,
 } from 'aws-sdk/clients/dynamodb';
 
-export const attributes = `id, #type, host, title, description, imageUrl,
-#long, lat, startDate, endDate, #text, sender, createdAt`;
-export const attributeNames = { '#text': 'text', '#type': 'type', '#long': 'long' };
+export const attributes = `id, #type, host, description, imageUrl, #name,
+imagePositionTop, startDate, endDate, #text, sender, createdAt, #location`;
+export const attributeNames = {
+  '#text': 'text',
+  '#type': 'type',
+  '#name': 'name',
+  '#location': 'location',
+};
 
 const dynamoDB = new AWS.DynamoDB.DocumentClient();
-
-export const get = async (params: GetItemInput) => await dynamoDB.get(params).promise();
 
 export const put = async (params: PutItemInput) => await dynamoDB.put(params).promise();
 

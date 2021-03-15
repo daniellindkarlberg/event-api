@@ -32,9 +32,7 @@ export class MessageController {
   }
 
   join(socket: Socket) {
-    socket.on(SocketEvent.JOIN, (eventId: string) => {
-      socket.join(eventId);
-    });
+    socket.on(SocketEvent.JOIN, (eventId: string) => socket.join(eventId));
   }
 
   emit(socket: Socket) {
