@@ -25,7 +25,7 @@ export class EmailController {
       const mailOptions = {
         from: body.event.host.email,
         to: body.recipients,
-        subject: `${body.event.host.nickname} invites you to the ${body.event.title}`,
+        subject: `${body.event.host.nickname} invites you to the ${body.event.name}`,
         text: 'Some invitation text...',
       };
 

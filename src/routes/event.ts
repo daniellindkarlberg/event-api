@@ -13,7 +13,7 @@ router
   .get('/user', async (ctx) => await ctrl.getByUserId(ctx, ctx.state.user.sub))
   .post('/', async (ctx) => await ctrl.create(ctx, ctx.state.user.sub, ctx.request.body))
   .post(
-    '/upload',
+    '/upload/:id',
     upload.single('image'),
     async (ctx) => await ctrl.upload(ctx, ctx.params.id, ctx.file),
   )

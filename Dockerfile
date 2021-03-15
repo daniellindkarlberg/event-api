@@ -1,19 +1,12 @@
-FROM node:alpine as builder
+FROM node:10.13.0-alpine
 
-RUN apk update
+ENV ENV_NAME prod
+ENV NODE_ENV prod
+ENV NODE_CONFIG_ENV prod
 
-RUN mkdir /app
-
-WORKDIR /app
-
-COPY package.json /app
-
-COPY . /app
-
+WORKDIR /usr/src/app
+COPY package.json .
 RUN npm install
-
+ADD . /usr/src/app
 RUN npm run build
-
-EXPOSE 8626
-
-CMD [ "node", "dist/app.js" ]
+CMD [ "npm", "start" ]

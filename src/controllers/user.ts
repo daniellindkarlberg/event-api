@@ -18,6 +18,7 @@ export class UserController {
   }
 
   async update(ctx: Context, id: string, body: Partial<User>) {
+    // UPDATE HOST IN EVENT META, USER IN GUEST AND SENDER IN MESSAGE
     try {
       const user = await auth0.updateUser(id, body);
 
@@ -28,6 +29,7 @@ export class UserController {
   }
 
   async upload(ctx: Context, id: string, file: File) {
+    // UPDATE HOST IN EVENT META, USER IN GUEST AND SENDER IN MESSAGE
     try {
       const url = await s3.upload(id, EntityType.USER, file);
 

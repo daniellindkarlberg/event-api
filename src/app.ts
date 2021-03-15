@@ -6,11 +6,8 @@ import jwt from 'koa-jwt';
 import http from 'http';
 import { MessageController } from '../src/controllers';
 import { router } from './routes';
-import * as dotenv from 'dotenv';
 
-dotenv.config();
-
-const { PORT, AUTH0_AUDIENCE, AUTH0_DOMAIN } = process.env;
+const PORT = 8626;
 const app = new Koa();
 
 const server = http.createServer(app.callback());
@@ -25,10 +22,10 @@ app
         cache: true,
         cacheMaxEntries: 5,
         cacheMaxAge: 36000000,
-        jwksUri: `${AUTH0_DOMAIN}/.well-known/jwks.json`,
+        jwksUri: 'https://event-dlk.eu.auth0.com/.well-known/jwks.json',
       }),
-      audience: AUTH0_AUDIENCE,
-      issuer: `${AUTH0_DOMAIN}/`,
+      audience: 'https://dlk-event.site',
+      issuer: 'https://event-dlk.eu.auth0.com/',
       algorithms: ['RS256'],
     }),
   )
