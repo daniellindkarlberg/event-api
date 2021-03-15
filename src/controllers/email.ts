@@ -4,9 +4,6 @@ import nodemailer from 'nodemailer';
 import mailgun from 'nodemailer-mailgun-transport';
 import { Event } from '../models/event';
 import { StatusCodes } from 'http-status-codes';
-import * as dotenv from 'dotenv';
-
-dotenv.config();
 
 const { MAILGUN_API_KEY, MAILGUN_DOMAIN } = process.env;
 

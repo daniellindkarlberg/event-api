@@ -1,12 +1,12 @@
-FROM node:10.13.0-alpine
 
-ENV ENV_NAME prod
-ENV NODE_ENV prod
-ENV NODE_CONFIG_ENV prod
+FROM node:alpine as builder
+RUN mkdir /app
+WORKDIR /app
+COPY package.json /app
+RUN yarn
+COPY . /app
+RUN yarn build
+RUN yarn install --prod
 
-WORKDIR /usr/src/app
-COPY package.json .
-RUN npm install
-ADD . /usr/src/app
-RUN npm run build
-CMD [ "npm", "start" ]
+CMD ["node", "dist/app.js"]
+EXPOSE 8626

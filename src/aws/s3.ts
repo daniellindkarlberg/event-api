@@ -1,7 +1,7 @@
 import { File } from '@koa/multer';
 import AWS from 'aws-sdk';
-import { EntityType } from 'aws-sdk/clients/iam';
 import { v1 as uuidv1 } from 'uuid';
+import { EntityType } from '../models';
 
 const s3 = new AWS.S3();
 

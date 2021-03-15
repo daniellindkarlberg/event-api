@@ -4,7 +4,7 @@ import bodyParser from 'koa-bodyparser';
 import { koaJwtSecret } from 'jwks-rsa';
 import jwt from 'koa-jwt';
 import http from 'http';
-import { MessageController } from '../src/controllers';
+import { MessageController } from './controllers';
 import { router } from './routes';
 
 const PORT = 8626;
