@@ -1,12 +1,14 @@
 
-FROM node:alpine as builder
-RUN mkdir /app
-WORKDIR /app
-COPY package.json /app
-RUN yarn
-COPY . /app
-RUN yarn build
-RUN yarn install --prod
+FROM node:alpine
 
-CMD ["node", "dist/app.js"]
+WORKDIR /usr/src/app
+
+COPY package.json .
+
+RUN npm install
+
+COPY . .
+
 EXPOSE 8626
+
+CMD [ "npm", "start" ]
