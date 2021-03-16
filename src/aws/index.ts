@@ -1,5 +1,6 @@
 import AWS from 'aws-sdk';
 import { Promise } from 'bluebird';
+import 'dotenv/config';
 
 const { AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY } = process.env;
 
