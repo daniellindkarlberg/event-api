@@ -6,6 +6,7 @@ import jwt from 'koa-jwt';
 import http from 'http';
 import { MessageController } from './controllers';
 import { router } from './routes';
+import 'dotenv/config';
 
 const PORT = 8626;
 const app = new Koa();

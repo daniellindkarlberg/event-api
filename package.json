@@ -37,6 +37,7 @@
     "aws-sdk": "^2.841.0",
     "bluebird": "^3.7.2",
     "cors": "^2.8.5",
+    "dotenv": "^8.2.0",
     "http-status-codes": "^2.1.4",
     "jsonwebtoken": "^8.5.1",
     "jwks-rsa": "^1.12.2",
