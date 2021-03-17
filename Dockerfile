@@ -1,12 +1,26 @@
 
-FROM node:alpine as builder
-RUN mkdir /app
-WORKDIR /app
-COPY package.json /app
-RUN yarn
-COPY . /app
-RUN yarn build
-RUN yarn install --prod
+FROM node:14
 
-CMD ["node", "dist/app.js"]
-EXPOSE 8626
+ENV NODE_ENV=production
+
+RUN mkdir /app
+
+WORKDIR /app
+
+COPY package.json /app
+
+COPY yarn.lock /app
+
+RUN yarn
+
+COPY . /app
+
+RUN yarn build
+
+RUN yarn install --production
+
+EXPOSE 8585
+
+CMD [ "node", "dist/app.js" ]
+
+
