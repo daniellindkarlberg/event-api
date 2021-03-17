@@ -36,10 +36,10 @@ app
         cache: true,
         cacheMaxEntries: 5,
         cacheMaxAge: 36000000,
-        jwksUri: `${AUTH0_DOMAIN}/.well-known/jwks.json`,
+        jwksUri: `https://${AUTH0_DOMAIN}/.well-known/jwks.json`,
       }),
       audience: AUTH0_AUDIENCE,
-      issuer: `${AUTH0_DOMAIN}/`,
+      issuer: `https://${AUTH0_DOMAIN}/`,
       algorithms: ['RS256'],
     }).unless({ path: [/^\/api\/ping$/] }),
   )

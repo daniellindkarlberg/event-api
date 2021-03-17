@@ -8,7 +8,7 @@ AWS.config.setPromisesDependency(Promise);
 AWS.config.update({
   accessKeyId: AWS_ACCESS_KEY_ID,
   secretAccessKey: AWS_SECRET_ACCESS_KEY,
-  region: 'us-east-2',
+  region: 'eu-north-1',
 });
 
 export * as db from './dynamo-db';

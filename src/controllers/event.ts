@@ -89,7 +89,7 @@ export class EventController {
           pk: id,
           sk: ContentType.META,
           gsi1pk: ContentType.META,
-          gsi1sk: body.startDate,
+          gsi1sk: userId,
           id,
           type: EntityType.EVENT,
           host,
@@ -101,6 +101,7 @@ export class EventController {
 
       return response(ctx, StatusCodes.OK, { id, host, ...body });
     } catch (error) {
+      console.log(error);
       return errorResponse(ctx, error.statusCode);
     }
   }
