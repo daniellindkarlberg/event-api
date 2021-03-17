@@ -3,20 +3,14 @@ import cors from '@koa/cors';
 import bodyParser from 'koa-bodyparser';
 import { koaJwtSecret } from 'jwks-rsa';
 import jwt from 'koa-jwt';
-import http from 'http';
-import { MessageController } from './controllers';
 import { router } from './routes';
 import 'dotenv/config';
 
 const { AUTH0_DOMAIN, AUTH0_AUDIENCE, PORT } = process.env;
 
-const port = PORT || 8626;
+const port = PORT || 8080;
 
 const app = new Koa();
-
-const server = http.createServer(app.callback());
-const messageController = new MessageController(server);
-messageController.init();
 
 app
   .use(cors({ origin: '*', credentials: true }))
@@ -36,4 +30,4 @@ app
   .use(bodyParser())
   .use(router.routes());
 
-server.listen(port, () => console.log(`Server running on ${port}`));
+app.listen(port, () => console.log(`Server running on ${port}`));
