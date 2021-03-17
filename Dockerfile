@@ -1,16 +1,26 @@
 
 FROM node:14
 
-WORKDIR /usr/src/app
+ENV NODE_ENV=production
 
-COPY package*.json ./
+RUN mkdir /app
 
-RUN npm install
+WORKDIR /app
 
-RUN npm build
+COPY package.json /app
 
-COPY . .
+COPY yarn.lock /app
+
+RUN yarn
+
+COPY . /app
+
+RUN yarn build
+
+RUN yarn install --production
 
 EXPOSE 8080
 
 CMD [ "node", "dist/app.js" ]
+
+
