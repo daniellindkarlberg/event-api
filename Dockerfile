@@ -19,7 +19,7 @@ RUN yarn build
 
 RUN yarn install --production
 
-EXPOSE 8080
+EXPOSE 8585
 
 CMD [ "node", "dist/app.js" ]
 

@@ -8,7 +8,7 @@ import 'dotenv/config';
 
 const { AUTH0_DOMAIN, AUTH0_AUDIENCE, PORT } = process.env;
 
-const port = PORT || 8080;
+const port = PORT || 8585;
 
 const app = new Koa();
 
