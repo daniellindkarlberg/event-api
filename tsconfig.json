@@ -1,14 +1,14 @@
 {
   "compilerOptions": {
-  "module": "commonjs",
-  "esModuleInterop": true,
-  "target": "es6",
-  "moduleResolution": "node",
-  "sourceMap": true,
-  "outDir": "dist",
-  "rootDir": "src",
-  "experimentalDecorators": true,
+    "module": "commonjs",
+    "esModuleInterop": true,
+    "target": "es6",
+    "moduleResolution": "node",
+    "sourceMap": true,
+    "outDir": "dist",
+    "rootDir": "src",
+    "experimentalDecorators": true,
+    "typeRoots": ["./custom_typings", "./node_modules/@types"]
   },
-  "include": ["src/**/*"],
   "lib": ["es2015"]
-  }
+}
