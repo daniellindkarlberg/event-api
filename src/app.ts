@@ -10,7 +10,7 @@ import 'dotenv/config';
 
 const { AUTH0_DOMAIN, AUTH0_AUDIENCE, PORT } = process.env;
 
-const port = PORT || 8626;
+const port = PORT;
 
 const app = new Koa();
 
@@ -20,6 +20,16 @@ messageController.init();
 
 app
   .use(cors({ origin: '*', credentials: true }))
+  .use((ctx, next) =>
+    next().catch((err) => {
+      if (err.status === 401) {
+        ctx.status = 401;
+        ctx.body = 'Unauthorized';
+      } else {
+        throw err;
+      }
+    }),
+  )
   .use(
     jwt({
       secret: koaJwtSecret({
@@ -31,7 +41,7 @@ app
       audience: AUTH0_AUDIENCE,
       issuer: `${AUTH0_DOMAIN}/`,
       algorithms: ['RS256'],
-    }),
+    }).unless({ path: [/^\/api\/ping$/] }),
   )
   .use(bodyParser())
   .use(router.routes());

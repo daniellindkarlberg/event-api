@@ -1,8 +1,6 @@
 
 FROM node:14
 
-ENV NODE_ENV=production
-
 RUN mkdir /app
 
 WORKDIR /app
@@ -15,12 +13,10 @@ RUN yarn
 
 COPY . /app
 
+RUN yarn install
+
 RUN yarn build
 
-RUN yarn install --production
-
-EXPOSE 8585
+EXPOSE 8080
 
 CMD [ "node", "dist/app.js" ]
-
-
