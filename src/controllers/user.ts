@@ -38,32 +38,6 @@ export class UserController {
       return errorResponse(ctx, error.statusCode);
     }
   }
-  /*   async updateEventSettings(
-    ctx: Context,
-    id: string,
-    eventId: string,
-    eventSettings: EventSettings,
-  ) {
-    try {
-      const params = {
-        TableName: 'Event',
-        Key: {
-          pk: eventId,
-          sk: `guest-${id}`,
-        },
-        UpdateExpression: 'SET eventSettings = :eventSettings',
-        ExpressionAttributeValues: {
-          ':eventSettings': eventSettings,
-        },
-      };
-
-      await db.update(params as UpdateItemInput);
-      return response(ctx, StatusCodes.OK, eventSettings);
-    } catch (error) {
-      console.log(error);
-      return errorResponse(ctx, error.statusCode);
-    }
-  } */
 
   async update(ctx: Context, id: string, body: Partial<User>) {
     try {
@@ -77,11 +51,11 @@ export class UserController {
 
   async upload(ctx: Context, id: string, file: File) {
     try {
-      const { thumbnailUrl } = await s3.upload(id, EntityType.USER, file);
+      const url = await s3.upload(id, EntityType.USER, file);
 
-      await auth0.updateUser(id, { picture: thumbnailUrl });
+      await auth0.updateUser(id, { picture: url });
 
-      return response(ctx, StatusCodes.OK, { url: thumbnailUrl });
+      return response(ctx, StatusCodes.OK, { url });
     } catch (error) {
       return errorResponse(ctx, error.statusCode);
     }

@@ -141,17 +141,17 @@ export class EventController {
 
   async upload(ctx: Context, id: string, file: File) {
     try {
-      const { imgUrl, thumbnailUrl } = await s3.upload(id, EntityType.EVENT, file);
+      // const { imgUrl, thumbnailUrl } = await s3.upload(id, EntityType.EVENT, file);
+      const imgUrl = await s3.upload(id, EntityType.EVENT, file);
       const params = {
         TableName,
         Key: {
           pk: id,
           sk: ContentType.META,
         },
-        UpdateExpression: 'set photo.imgUrl = :imgUrl, photo.thumbnailUrl = :thumbnailUrl',
+        UpdateExpression: 'set photo.imgUrl = :imgUrl',
         ExpressionAttributeValues: {
           ':imgUrl': imgUrl,
-          ':thumbnailUrl': thumbnailUrl,
         },
       };
 

@@ -10,9 +10,9 @@ export class UploadController {
   async upload(ctx: Context, file: File) {
     try {
       const id = uuidv4();
-      const { imgUrl, thumbnailUrl } = await s3.upload(id, EntityType.MESSAGE, file);
+      const imgUrl = await s3.upload(id, EntityType.MESSAGE, file);
 
-      return response(ctx, StatusCodes.OK, { imgUrl, thumbnailUrl });
+      return response(ctx, StatusCodes.OK, imgUrl);
     } catch (error) {
       return errorResponse(ctx, error.statusCode);
     }
