@@ -1,10 +1,10 @@
 import { Server } from 'http';
 import SocketIO, { Socket } from 'socket.io';
 import { v4 as uuidv4 } from 'uuid';
-import { EntityType, SocketMessageEvent } from '../models';
 import { db } from '../aws';
 import { auth0 } from '../auth0';
 import { PutItemInput } from 'aws-sdk/clients/dynamodb';
+import { EntityType, SocketMessageEvent } from '../models';
 
 enum SocketEvent {
   CONNECTION = 'connection',

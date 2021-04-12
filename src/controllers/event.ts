@@ -1,17 +1,17 @@
 import { Context } from 'koa';
+import { File } from '@koa/multer';
 import { v4 as uuidv4 } from 'uuid';
 import { StatusCodes } from 'http-status-codes';
-import { errorResponse, response } from '../utils';
-import { ContentType, EntityType, Event } from '../models';
-import { File } from '@koa/multer';
-import { db, s3 } from '../aws';
-import { auth0 } from '../auth0';
 import {
   DeleteItemInput,
   PutItemInput,
   QueryInput,
   UpdateItemInput,
 } from 'aws-sdk/clients/dynamodb';
+import { db, s3 } from '../aws';
+import { auth0 } from '../auth0';
+import { errorResponse, response } from '../utils';
+import { ContentType, EntityType, Event } from '../models';
 
 const TableName = 'Event';
 export enum SecondaryIndex {
@@ -115,7 +115,7 @@ export class EventController {
         UpdateExpression: `SET #name = :name, description = :description,
         #location = :location, startDate = :startDate,
         endDate = :endDate, photo.positionTop = :positionTop,
-          theme = :theme`,
+        theme = :theme`,
         ExpressionAttributeValues: {
           ':name': name,
           ':description': description,
