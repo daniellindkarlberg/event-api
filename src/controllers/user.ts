@@ -51,11 +51,11 @@ export class UserController {
 
   async upload(ctx: Context, id: string, file: File) {
     try {
-      const url = await s3.upload(id, EntityType.USER, file);
+      const { thumbnailUrl } = await s3.upload(id, EntityType.USER, file);
 
-      await auth0.updateUser(id, { picture: url });
+      await auth0.updateUser(id, { picture: thumbnailUrl });
 
-      return response(ctx, StatusCodes.OK, { url });
+      return response(ctx, StatusCodes.OK, { url: thumbnailUrl });
     } catch (error) {
       return errorResponse(ctx, error.statusCode);
     }
