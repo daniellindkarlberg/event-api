@@ -6,8 +6,8 @@ import {
   UpdateItemInput,
 } from 'aws-sdk/clients/dynamodb';
 
-export const attributes = `id, #type, host, description, imageUrl, #name,
-imagePositionTop, startDate, endDate, #text, sender, createdAt, #location`;
+export const attributes = `id, #text, #type, #name, #location, host, description,
+ startDate, endDate, sender, createdAt, positionTop, photo, imgUrl, thumbnailUrl, theme`;
 export const attributeNames = {
   '#text': 'text',
   '#type': 'type',

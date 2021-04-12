@@ -14,9 +14,10 @@ import {
 } from 'aws-sdk/clients/dynamodb';
 
 const TableName = 'Event';
-enum SecondaryIndex {
+export enum SecondaryIndex {
   EVENT_META_INDEX = 'event-meta-index',
-  EVENT_USER_INDEX = 'event-user-index',
+  USER_EVENT_INDEX = 'user-event-index',
+  USER_MESSAGE_INDEX = 'user-message-index',
 }
 export class EventController {
   async get(ctx: Context) {
@@ -49,36 +50,23 @@ export class EventController {
 
       const { Items: items } = await db.query(params as QueryInput);
 
+      if (!items.length) {
+        ctx.throw(404, 'Not found');
+      }
+
       const event = items.find((item) => item.type === EntityType.EVENT) || ({} as Event);
-      const messages = items.filter((item) => item.type === EntityType.MESSAGE);
+      const messages = items
+        .filter((item) => item.type === EntityType.MESSAGE)
+        .sort((x, y) => x.createdAt - y.createdAt);
       const guests = items.filter((item) => item.type === EntityType.USER);
 
-      return response(ctx, StatusCodes.OK, { ...event, messages, guests });
+      return response(ctx, StatusCodes.OK, { event: { ...event, guests }, messages });
     } catch (error) {
       return errorResponse(ctx, error.statusCode);
     }
   }
 
-  async getByUserId(ctx: Context, id: string) {
-    try {
-      const params = {
-        TableName,
-        IndexName: SecondaryIndex.EVENT_USER_INDEX,
-        KeyConditionExpression: 'gsi2pk = :pk',
-        ExpressionAttributeValues: {
-          ':pk': `user-${id}`,
-        },
-      };
-
-      const { Items: items } = await db.query(params as QueryInput);
-
-      return response(ctx, StatusCodes.OK, items);
-    } catch (error) {
-      return errorResponse(ctx, error.statusCode);
-    }
-  }
-
-  async create(ctx: Context, userId: string, body: Event) {
+  async create(ctx: Context, userId: string, body: { event: Event; invites: string[] }) {
     try {
       const { user_id, nickname, picture } = await auth0.getUser(userId);
       const id = `${EntityType.EVENT}-${uuidv4()}`;
@@ -93,58 +81,83 @@ export class EventController {
           id,
           type: EntityType.EVENT,
           host,
-          ...body,
+          ...body.event,
         },
       };
 
       await db.put(params as PutItemInput);
 
-      return response(ctx, StatusCodes.OK, { id, host, ...body });
-    } catch (error) {
-      console.log(error);
-      return errorResponse(ctx, error.statusCode);
-    }
-  }
+      this.addGuest(ctx, userId, id);
 
-  async update(ctx: Context, id: string, body: Event) {
-    // UPDATE EVENT META AND ALL GUESTS(GET EVENT BY ID AND UPDATE ALL GUESTS EVENT DATA)
-    try {
-      const params = {
-        TableName,
-        Item: {
-          pk: id,
-          sk: ContentType.META,
-          ...body,
-        },
-      };
-
-      await db.put(params as PutItemInput);
-
-      return response(ctx, StatusCodes.OK, body);
+      return response(ctx, StatusCodes.OK, { id, host, ...body.event });
     } catch (error) {
       return errorResponse(ctx, error.statusCode);
     }
   }
 
-  async upload(ctx: Context, id: string, file: File) {
-    // UPDATE EVENT META AND ALL GUESTS(GET EVENT BY ID AND UPDATE ALL GUESTS EVENT DATA)
+  async update(ctx: Context, id: string, body: { event: Event; invites: string[] }) {
+    const {
+      name,
+      description,
+      location,
+      startDate,
+      endDate,
+      photo: { positionTop },
+      theme,
+    } = body.event;
     try {
-      const url = await s3.upload(id, EntityType.EVENT, file);
       const params = {
         TableName,
         Key: {
           pk: id,
           sk: ContentType.META,
         },
-        UpdateExpression: 'set imageUrl = :url',
+        UpdateExpression: `SET #name = :name, description = :description,
+        #location = :location, startDate = :startDate,
+        endDate = :endDate, photo.positionTop = :positionTop,
+          theme = :theme`,
         ExpressionAttributeValues: {
-          ':url': url,
+          ':name': name,
+          ':description': description,
+          ':location': location,
+          ':startDate': startDate,
+          ':endDate': endDate || 0,
+          ':positionTop': positionTop,
+          ':theme': theme,
+        },
+        ExpressionAttributeNames: {
+          '#name': 'name',
+          '#location': 'location',
         },
       };
 
       await db.update(params as UpdateItemInput);
 
-      return response(ctx, StatusCodes.OK, { url });
+      return response(ctx, StatusCodes.OK, body.event);
+    } catch (error) {
+      return errorResponse(ctx, error.statusCode);
+    }
+  }
+
+  async upload(ctx: Context, id: string, file: File) {
+    try {
+      const { imgUrl, thumbnailUrl } = await s3.upload(id, EntityType.EVENT, file);
+      const params = {
+        TableName,
+        Key: {
+          pk: id,
+          sk: ContentType.META,
+        },
+        UpdateExpression: 'set photo.imgUrl = :imgUrl, photo.thumbnailUrl = :thumbnailUrl',
+        ExpressionAttributeValues: {
+          ':imgUrl': imgUrl,
+          ':thumbnailUrl': thumbnailUrl,
+        },
+      };
+
+      await db.update(params as UpdateItemInput);
+
+      return response(ctx, StatusCodes.OK, { imgUrl });
     } catch (error) {
       return errorResponse(ctx, error.statusCode);
     }
@@ -167,20 +180,17 @@ export class EventController {
     }
   }
 
-  async addGuest(ctx: Context, userId: string, { id, name, description, imageUrl }: Event) {
-    // GET USER AND ADD PROPERTIES FROM USER
+  async addGuest(ctx: Context, userId: string, eventId: string) {
     try {
       const params = {
         TableName,
         Item: {
-          pk: id,
+          pk: eventId,
           sk: `guest-${userId}`,
           gsi2pk: `user-${userId}`,
+          gsi2sk: eventId,
+          id: eventId,
           type: EntityType.USER,
-          id,
-          name,
-          description,
-          imageUrl,
         },
       };
 

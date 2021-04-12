@@ -9,6 +9,7 @@ const ctrl = new UserController();
 
 router
   .get('/', async (ctx) => await ctrl.get(ctx, ctx.state.user.sub))
+  .get('/event', async (ctx) => await ctrl.getEvents(ctx, ctx.state.user.sub))
   .put('/', async (ctx) => await ctrl.update(ctx, ctx.state.user.sub, ctx.request.body))
   .post(
     '/upload',

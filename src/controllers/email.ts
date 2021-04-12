@@ -20,7 +20,7 @@ export class EmailController {
       const transporter = nodemailer.createTransport(mailgun(auth));
 
       const mailOptions = {
-        from: body.event.host.email,
+        // from: body.event.host.email,
         to: body.recipients,
         subject: `${body.event.host.nickname} invites you to the ${body.event.name}`,
         text: 'Some invitation text...',
