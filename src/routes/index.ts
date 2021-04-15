@@ -6,7 +6,7 @@ import user from './user';
 import email from './email';
 import upload from './upload';
 
-export const router = new Router({ prefix: '/api' });
+export const router = new Router({ prefix: '/v1' });
 
 router
   .use('/ping', ping.routes(), ping.allowedMethods())

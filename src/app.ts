@@ -41,7 +41,7 @@ app
       audience: AUTH0_AUDIENCE,
       issuer: `https://${AUTH0_DOMAIN}/`,
       algorithms: ['RS256'],
-    }).unless({ path: [/^\/api\/ping$/] }),
+    }).unless({ path: [/^\/v1\/ping$/] }),
   )
   .use(bodyParser())
   .use(router.routes());

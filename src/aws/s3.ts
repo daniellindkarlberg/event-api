@@ -12,7 +12,7 @@ export const upload = async (
   { buffer, mimetype, originalname }: File,
 ) => {
   const params = {
-    Bucket: 'images.dlk-event.site',
+    Bucket: 'eventually-photos',
     Key: `${type}/${id}/${uuidv1()}-big-${originalname}`,
     Body: buffer,
     ContentType: mimetype,
@@ -21,8 +21,9 @@ export const upload = async (
   const thumbnail = await sharp(buffer)
     .resize({
       fit: sharp.fit.contain,
-      width: 400,
+      height: 400,
     })
+    .jpeg({ quality: 100, progressive: true })
     .toBuffer();
 
   const thumbnailUrl = await s3
