@@ -7,7 +7,7 @@ import {
 } from 'aws-sdk/clients/dynamodb';
 
 export const attributes = `id, #text, #type, #name, #location, host, description,
- startDate, endDate, sender, createdAt, positionTop, photo, imgUrl, thumbnailUrl, theme`;
+ startDate, endDate, sender, createdAt, positionTop, photo, imgUrl, thumbnailUrl, theme, privacy`;
 export const attributeNames = {
   '#text': 'text',
   '#type': 'type',

@@ -11,7 +11,7 @@ import {
 import { db, s3 } from '../aws';
 import { auth0 } from '../auth0';
 import { errorResponse, response } from '../utils';
-import { ContentType, EntityType, Event } from '../models';
+import { ContentType, EntityType, Event, Privacy } from '../models';
 
 const TableName = 'Event';
 export enum SecondaryIndex {
@@ -20,9 +20,9 @@ export enum SecondaryIndex {
   USER_MESSAGE_INDEX = 'user-message-index',
 }
 export class EventController {
-  async get(ctx: Context) {
+  async get(ctx: Context, userId: string) {
     try {
-      const params = {
+      const eventParams = {
         TableName,
         IndexName: SecondaryIndex.EVENT_META_INDEX,
         KeyConditionExpression: 'gsi1pk = :pk',
@@ -31,9 +31,24 @@ export class EventController {
         },
       };
 
-      const { Items: items } = await db.query(params as QueryInput);
+      const userEventParams = {
+        TableName: 'Event',
+        IndexName: SecondaryIndex.USER_EVENT_INDEX,
+        KeyConditionExpression: 'gsi2pk = :pk',
+        ExpressionAttributeValues: {
+          ':pk': `user-${userId}`,
+        },
+      };
 
-      return response(ctx, StatusCodes.OK, items);
+      const { Items: userEventItems } = await db.query(userEventParams as QueryInput);
+      const userEvents = userEventItems.map((userEvent) => userEvent.id);
+
+      const { Items: items } = await db.query(eventParams as QueryInput);
+      const events = items.filter(
+        (event) => event.privacy === Privacy.PUBLIC || userEvents.includes(event.id),
+      );
+
+      return response(ctx, StatusCodes.OK, events);
     } catch (error) {
       return errorResponse(ctx, error.statusCode);
     }
@@ -202,7 +217,7 @@ export class EventController {
     }
   }
 
-  async removeGuest(ctx: Context, id: string, userId: string) {
+  async removeGuest(ctx: Context, userId: string, id: string) {
     try {
       const params = {
         TableName,

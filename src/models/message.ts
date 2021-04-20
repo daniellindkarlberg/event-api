@@ -7,6 +7,8 @@ export interface Message {
   image: boolean;
   imgUrl?: string;
   thumbnailUrl?: string;
+  reply: boolean;
+  replyTo?: string;
   createdAt: number;
 }
 export interface SocketMessageEvent {
