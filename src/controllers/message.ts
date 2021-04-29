@@ -38,7 +38,17 @@ export class MessageController {
   emit(socket: Socket) {
     socket.on(
       SocketEvent.MESSAGE,
-      async ({ eventId, userId, text = '', photo, imgUrl, thumbnailUrl }: SocketMessageEvent) => {
+      async ({
+        eventId,
+        userId,
+        text = '',
+        photo,
+        imgUrl,
+        thumbnailUrl,
+        reply,
+        replyTo,
+        originalMessage,
+      }: SocketMessageEvent) => {
         try {
           const { nickname, picture } = await auth0.getUser(userId);
           const message = {
@@ -49,6 +59,9 @@ export class MessageController {
             photo,
             imgUrl,
             thumbnailUrl,
+            reply,
+            replyTo,
+            originalMessage,
             createdAt: Math.floor(new Date().getTime() / 1000),
           };
 

@@ -13,3 +13,4 @@ AWS.config.update({
 
 export * as db from './dynamo-db';
 export * as s3 from './s3';
+export * as ses from './ses';

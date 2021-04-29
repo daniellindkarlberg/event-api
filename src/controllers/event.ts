@@ -8,10 +8,11 @@ import {
   QueryInput,
   UpdateItemInput,
 } from 'aws-sdk/clients/dynamodb';
-import { db, s3 } from '../aws';
+import { db, s3, ses } from '../aws';
 import { auth0 } from '../auth0';
 import { errorResponse, response } from '../utils';
 import { ContentType, EntityType, Event, Privacy } from '../models';
+import { invitationEmail } from '../aws/ses';
 
 const TableName = 'Event';
 export enum SecondaryIndex {
@@ -99,6 +100,9 @@ export class EventController {
           ...body.event,
         },
       };
+      if (body.invites.length) {
+        await ses.sendEmail(body.invites, invitationEmail(nickname, { id, ...body.event }));
+      }
 
       await db.put(params as PutItemInput);
 
@@ -196,6 +200,7 @@ export class EventController {
   }
 
   async addGuest(ctx: Context, userId: string, eventId: string) {
+    const user = await auth0.getUser(userId);
     try {
       const params = {
         TableName,
@@ -206,24 +211,61 @@ export class EventController {
           gsi2sk: eventId,
           id: eventId,
           type: EntityType.USER,
+          nickname: user.nickname,
+          picture: user.picture,
         },
       };
 
       await db.put(params as PutItemInput);
+      const guests = await this.getGuests(eventId);
 
-      return response(ctx, StatusCodes.OK);
+      return response(ctx, StatusCodes.OK, guests);
     } catch (error) {
       return errorResponse(ctx, error.statusCode);
     }
   }
 
-  async removeGuest(ctx: Context, userId: string, id: string) {
+  async removeGuest(ctx: Context, userId: string, eventId: string) {
     try {
       const params = {
         TableName,
         Key: {
-          pk: id,
+          pk: eventId,
           sk: `guest-${userId}`,
+        },
+      };
+
+      await db.remove(params as DeleteItemInput);
+
+      const guests = await this.getGuests(eventId);
+
+      return response(ctx, StatusCodes.OK, guests);
+    } catch (error) {
+      return errorResponse(ctx, error.statusCode);
+    }
+  }
+
+  async getGuests(eventId: string) {
+    const params = {
+      TableName,
+      KeyConditionExpression: 'pk = :pk and begins_with(sk, :sk)',
+      ExpressionAttributeValues: {
+        ':pk': eventId,
+        ':sk': 'guest',
+      },
+    };
+
+    const { Items: guests } = await db.query(params as QueryInput);
+
+    return guests;
+  }
+
+  async removeMessage(ctx: Context, id: string) {
+    try {
+      const params = {
+        TableName,
+        Key: {
+          sk: `message-${id}`,
         },
       };
 

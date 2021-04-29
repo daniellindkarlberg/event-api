@@ -1,14 +1,15 @@
 import AWS from 'aws-sdk';
+import { Event } from '../models';
 
 const ses = new AWS.SES({ region: 'eu-north-1' });
 
 export const sendEmail = async (
-  to: string,
+  to: string[],
   message: { subject: string; body: string; text: string },
 ) => {
   const params = {
     Destination: {
-      ToAddresses: [to],
+      ToAddresses: to,
     },
     Message: {
       Body: {
@@ -26,9 +27,16 @@ export const sendEmail = async (
         Data: message.subject,
       },
     },
-    ReturnPath: 'noreply@dart3.app',
-    Source: 'noreply@dart3.app',
+    ReturnPath: 'info@eventfully.se',
+    Source: 'info@eventfully.se',
   };
 
   return await ses.sendEmail(params).promise();
 };
+
+export const invitationEmail = (sender: string, event: Event) => ({
+  subject: 'You have been invited to an event!',
+  body: `${sender} has invited you to the event <h2>${event.name}</h2>,
+  <a href="https://eventfully.se/events/${event.id}">Accept invitation</a>`,
+  text: `WELCOME`,
+});

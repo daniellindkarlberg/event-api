@@ -4,6 +4,7 @@ export interface Event {
   host: Host;
   type: EntityType.EVENT;
   privacy: Privacy;
+  category: Category;
   name: string;
   description: string;
   location: EventLocation;
@@ -33,6 +34,11 @@ export interface Theme {
   name: string;
   primaryColor: string;
   darkMode: boolean;
+}
+export interface Category {
+  name: string;
+  value: string;
+  icon: string;
 }
 
 export enum Privacy {
