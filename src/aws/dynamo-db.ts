@@ -6,7 +6,7 @@ import {
   UpdateItemInput,
 } from 'aws-sdk/clients/dynamodb';
 
-export const attributes = `id, #text, #type, #name, #location, host, description,
+export const attributes = `id, #text, #type, #name, #location, #email, host, description,
  startDate, endDate, sender, createdAt, positionTop, photo, imgUrl, thumbnailUrl,
  theme, privacy, nickname, picture, category, reply, replyTo, originalMessage`;
 export const attributeNames = {
@@ -14,6 +14,7 @@ export const attributeNames = {
   '#type': 'type',
   '#name': 'name',
   '#location': 'location',
+  '#email': 'email',
 };
 
 const dynamoDB = new AWS.DynamoDB.DocumentClient();

@@ -200,7 +200,7 @@ export class EventController {
   }
 
   async addGuest(ctx: Context, userId: string, eventId: string) {
-    const user = await auth0.getUser(userId);
+    const { nickname, picture, email } = await auth0.getUser(userId);
     try {
       const params = {
         TableName,
@@ -211,8 +211,9 @@ export class EventController {
           gsi2sk: eventId,
           id: eventId,
           type: EntityType.USER,
-          nickname: user.nickname,
-          picture: user.picture,
+          email,
+          nickname,
+          picture,
         },
       };
 

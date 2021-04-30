@@ -11,5 +11,5 @@ const auth0 = new ManagementClient({
 });
 
 export const getUser = async (id: string) => await auth0.getUser({ id });
-export const updateUser = async (id: string, meta: Partial<User>) =>
-  await auth0.updateUserMetadata({ id }, meta);
+export const updateUser = async (id: string, data: Partial<User>) =>
+  await auth0.updateUser({ id }, data);

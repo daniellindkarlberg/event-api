@@ -57,6 +57,7 @@ export class UserController {
 
       return response(ctx, StatusCodes.OK, { url: thumbnailUrl });
     } catch (error) {
+      console.log(error);
       return errorResponse(ctx, error.statusCode);
     }
   }

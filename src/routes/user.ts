@@ -14,7 +14,7 @@ router
   .post(
     '/upload',
     upload.single('image'),
-    async (ctx) => await ctrl.upload(ctx, ctx.params.id, ctx.file),
+    async (ctx) => await ctrl.upload(ctx, ctx.state.user.sub, ctx.file),
   );
 
 export default router;
