@@ -135,7 +135,7 @@ export class EventController {
           sk: ContentType.META,
         },
         UpdateExpression: `set #name = :name, startDate = :startDate,
-        endDate = :endDate, privacy = :privacy #location = :location, description = :description,
+        endDate = :endDate, privacy = :privacy, #location = :location, description = :description,
          photo.positionTop = :positionTop,
         theme = :theme`,
         ExpressionAttributeValues: {
