@@ -6,9 +6,19 @@ import {
   UpdateItemInput,
 } from 'aws-sdk/clients/dynamodb';
 
+export enum Table {
+  EVENT = 'Event',
+}
+
+export enum SecondaryIndex {
+  EVENT_META_INDEX = 'event-meta-index',
+  USER_EVENT_INDEX = 'user-event-index',
+  USER_MESSAGE_INDEX = 'user-message-index',
+}
+
 export const attributes = `id, #text, #type, #name, #location, #email, host, description,
  startDate, endDate, sender, createdAt, positionTop, photo, imgUrl, thumbnailUrl,
- theme, privacy, nickname, picture, category, reply, replyTo, originalMessage`;
+ theme, privacy, nickname, username, picture, category, reply, replyTo, originalMessage`;
 export const attributeNames = {
   '#text': 'text',
   '#type': 'type',
@@ -33,3 +43,33 @@ export const query = async (params: QueryInput) =>
     .promise();
 
 export const remove = async (params: DeleteItemInput) => await dynamoDB.delete(params).promise();
+
+export const generateUpdateParams = (
+  pk: string,
+  sk: string,
+  updateExpression: string,
+  expressionAttributeValues: { [key: string]: string },
+) => {
+  return {
+    TableName: Table.EVENT,
+    Key: {
+      pk,
+      sk,
+    },
+    UpdateExpression: `set ${updateExpression}`,
+    ExpressionAttributeValues: expressionAttributeValues,
+  };
+};
+
+export const generateQueryParams = (
+  keyConditionExpression: string,
+  expressionAttributeValues: { [key: string]: string },
+  indexName?: string,
+) => {
+  return {
+    TableName: 'Event',
+    ...(indexName && { IndexName: indexName }),
+    KeyConditionExpression: keyConditionExpression,
+    ExpressionAttributeValues: expressionAttributeValues,
+  };
+};

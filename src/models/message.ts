@@ -1,6 +1,7 @@
 import { User, EntityType } from '.';
 export interface Message {
   id: string;
+  eventId: string;
   type: EntityType.MESSAGE;
   sender: Partial<User>;
   text: string;

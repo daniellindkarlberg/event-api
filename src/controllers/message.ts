@@ -50,11 +50,12 @@ export class MessageController {
         originalMessage,
       }: SocketMessageEvent) => {
         try {
-          const { nickname, picture } = await auth0.getUser(userId);
+          const { username, picture } = await auth0.getUser(userId);
           const message = {
             id: `${EntityType.MESSAGE}-${uuidv4()}`,
+            eventId,
             type: EntityType.MESSAGE,
-            sender: { user_id: userId, nickname, picture },
+            sender: { user_id: userId, username, picture },
             text,
             photo,
             imgUrl,
@@ -70,6 +71,8 @@ export class MessageController {
             Item: {
               pk: eventId,
               sk: message.id,
+              gsi3pk: `user-${userId}`,
+              gsi3sk: eventId,
               ...message,
             },
           };

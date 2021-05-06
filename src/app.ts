@@ -8,7 +8,7 @@ import { MessageController } from './controllers';
 import { router } from './routes';
 import 'dotenv/config';
 
-const { AUTH0_DOMAIN, AUTH0_AUDIENCE, PORT } = process.env;
+const { PORT, AUTH0_DOMAIN, AUTH0_AUDIENCE } = process.env;
 
 const port = PORT;
 
@@ -44,6 +44,7 @@ app
     }).unless({ path: [/^\/v1\/ping$/] }),
   )
   .use(bodyParser())
-  .use(router.routes());
+  .use(router.routes())
+  .use(router.allowedMethods());
 
 server.listen(port, () => console.log(`Server running on ${port}`));

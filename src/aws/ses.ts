@@ -34,7 +34,7 @@ export const sendEmail = async (
   return await ses.sendEmail(params).promise();
 };
 
-export const invitationEmail = (sender: string, event: Event) => ({
+export const generateInvitationEmail = (sender: string, event: Event) => ({
   subject: 'You have been invited to an event!',
   body: `${sender} has invited you to the event <h2>${event.name}</h2>,
   <a href="https://eventfully.se/events/${event.id}">Accept invitation</a>`,

@@ -12,71 +12,65 @@ import { db, s3, ses } from '../aws';
 import { auth0 } from '../auth0';
 import { errorResponse, response } from '../utils';
 import { ContentType, EntityType, Event, Privacy } from '../models';
-import { invitationEmail } from '../aws/ses';
+import { generateInvitationEmail } from '../aws/ses';
+import { generateQueryParams, generateUpdateParams, SecondaryIndex, Table } from '../aws/dynamo-db';
 
-const TableName = 'Event';
-export enum SecondaryIndex {
-  EVENT_META_INDEX = 'event-meta-index',
-  USER_EVENT_INDEX = 'user-event-index',
-  USER_MESSAGE_INDEX = 'user-message-index',
-}
+const TableName = Table.EVENT;
 export class EventController {
   async get(ctx: Context, userId: string) {
     try {
-      const eventParams = {
-        TableName,
-        IndexName: SecondaryIndex.EVENT_META_INDEX,
-        KeyConditionExpression: 'gsi1pk = :pk',
-        ExpressionAttributeValues: {
-          ':pk': ContentType.META,
-        },
-      };
-
-      const userEventParams = {
-        TableName: 'Event',
-        IndexName: SecondaryIndex.USER_EVENT_INDEX,
-        KeyConditionExpression: 'gsi2pk = :pk',
-        ExpressionAttributeValues: {
-          ':pk': `user-${userId}`,
-        },
-      };
-
-      const { Items: userEventItems } = await db.query(userEventParams as QueryInput);
-      const userEvents = userEventItems.map((userEvent) => userEvent.id);
-
-      const { Items: items } = await db.query(eventParams as QueryInput);
-      const events = items.filter(
-        (event) => event.privacy === Privacy.PUBLIC || userEvents.includes(event.id),
+      const { Items: events } = await db.query(
+        generateQueryParams(
+          'gsi1pk = :pk',
+          {
+            ':pk': ContentType.META,
+          },
+          SecondaryIndex.EVENT_META_INDEX,
+        ) as QueryInput,
       );
 
-      return response(ctx, StatusCodes.OK, events);
+      const { Items: userEvents } = await db.query(
+        generateQueryParams(
+          'gsi2pk = :pk',
+          {
+            ':pk': `user-${userId}`,
+          },
+          SecondaryIndex.USER_EVENT_INDEX,
+        ) as QueryInput,
+      );
+
+      return response(
+        ctx,
+        StatusCodes.OK,
+        events.filter(
+          (event) =>
+            event.privacy === Privacy.PUBLIC ||
+            userEvents.map((userEvent) => userEvent.id).includes(event.id),
+        ),
+      );
     } catch (error) {
       return errorResponse(ctx, error.statusCode);
     }
   }
   async getById(ctx: Context, id: string) {
     try {
-      const params = {
-        TableName,
-        KeyConditionExpression: 'pk = :id',
-        ExpressionAttributeValues: {
+      const { Items: items } = await db.query(
+        generateQueryParams('pk = :id', {
           ':id': id,
-        },
-      };
+        }) as QueryInput,
+      );
 
-      const { Items: items } = await db.query(params as QueryInput);
-
-      if (!items.length) {
+      if (items.length === 0) {
         ctx.throw(404, 'Not found');
       }
 
-      const event = items.find((item) => item.type === EntityType.EVENT) || ({} as Event);
+      const meta = items.find((item) => item.type === EntityType.EVENT) || ({} as Event);
       const messages = items
         .filter((item) => item.type === EntityType.MESSAGE)
         .sort((x, y) => x.createdAt - y.createdAt);
       const guests = items.filter((item) => item.type === EntityType.USER);
 
-      return response(ctx, StatusCodes.OK, { event: { ...event, guests }, messages });
+      return response(ctx, StatusCodes.OK, { event: { ...meta, guests }, messages });
     } catch (error) {
       return errorResponse(ctx, error.statusCode);
     }
@@ -84,9 +78,9 @@ export class EventController {
 
   async create(ctx: Context, userId: string, body: { event: Event; invites: string[] }) {
     try {
-      const { user_id, nickname, picture } = await auth0.getUser(userId);
+      const { user_id, username, picture } = await auth0.getUser(userId);
       const id = `${EntityType.EVENT}-${uuidv4()}`;
-      const host = { id: user_id, nickname, picture };
+      const host = { id: user_id, username, picture };
       const params = {
         TableName,
         Item: {
@@ -100,8 +94,8 @@ export class EventController {
           ...body.event,
         },
       };
-      if (body.invites.length) {
-        await ses.sendEmail(body.invites, invitationEmail(nickname, { id, ...body.event }));
+      if (body.invites.length > 0) {
+        await ses.sendEmail(body.invites, generateInvitationEmail(username, { id, ...body.event }));
       }
 
       await db.put(params as PutItemInput);
@@ -117,10 +111,11 @@ export class EventController {
   async update(ctx: Context, id: string, body: { event: Event; invites: string[] }) {
     const {
       name,
-      description,
-      location,
       startDate,
       endDate,
+      privacy,
+      location,
+      description,
       photo: { positionTop },
       theme,
     } = body.event;
@@ -131,16 +126,17 @@ export class EventController {
           pk: id,
           sk: ContentType.META,
         },
-        UpdateExpression: `SET #name = :name, description = :description,
-        #location = :location, startDate = :startDate,
-        endDate = :endDate, photo.positionTop = :positionTop,
+        UpdateExpression: `set #name = :name, startDate = :startDate,
+        endDate = :endDate, privacy = :privacy #location = :location, description = :description,
+         photo.positionTop = :positionTop,
         theme = :theme`,
         ExpressionAttributeValues: {
           ':name': name,
-          ':description': description,
-          ':location': location,
           ':startDate': startDate,
           ':endDate': endDate || 0,
+          ':privacy': privacy,
+          ':location': location,
+          ':description': description,
           ':positionTop': positionTop,
           ':theme': theme,
         },
@@ -161,20 +157,18 @@ export class EventController {
   async upload(ctx: Context, id: string, file: File) {
     try {
       const { imgUrl, thumbnailUrl } = await s3.upload(id, EntityType.EVENT, file);
-      const params = {
-        TableName,
-        Key: {
-          pk: id,
-          sk: ContentType.META,
-        },
-        UpdateExpression: 'set photo.imgUrl = :imgUrl, photo.thumbnailUrl = :thumbnailUrl',
-        ExpressionAttributeValues: {
-          ':imgUrl': imgUrl,
-          ':thumbnailUrl': thumbnailUrl,
-        },
-      };
 
-      await db.update(params as UpdateItemInput);
+      await db.update(
+        generateUpdateParams(
+          id,
+          ContentType.META,
+          'photo.imgUrl = :imgUrl, photo.thumbnailUrl = :thumbnailUrl',
+          {
+            ':imgUrl': imgUrl,
+            ':thumbnailUrl': thumbnailUrl,
+          },
+        ) as UpdateItemInput,
+      );
 
       return response(ctx, StatusCodes.OK, { imgUrl });
     } catch (error) {
@@ -200,7 +194,7 @@ export class EventController {
   }
 
   async addGuest(ctx: Context, userId: string, eventId: string) {
-    const { nickname, picture, email } = await auth0.getUser(userId);
+    const { username, picture, email } = await auth0.getUser(userId);
     try {
       const params = {
         TableName,
@@ -212,7 +206,7 @@ export class EventController {
           id: eventId,
           type: EntityType.USER,
           email,
-          nickname,
+          username,
           picture,
         },
       };
@@ -247,16 +241,12 @@ export class EventController {
   }
 
   async getGuests(eventId: string) {
-    const params = {
-      TableName,
-      KeyConditionExpression: 'pk = :pk and begins_with(sk, :sk)',
-      ExpressionAttributeValues: {
+    const { Items: guests } = await db.query(
+      generateQueryParams('pk = :pk and begins_with(sk, :sk)', {
         ':pk': eventId,
         ':sk': 'guest',
-      },
-    };
-
-    const { Items: guests } = await db.query(params as QueryInput);
+      }) as QueryInput,
+    );
 
     return guests;
   }
