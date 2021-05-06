@@ -43,4 +43,5 @@ export interface Event {
   endDate?: number;
   theme: Theme;
   photo: Photo;
+  attending: number;
 }
