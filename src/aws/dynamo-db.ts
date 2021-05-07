@@ -18,7 +18,7 @@ export enum SecondaryIndex {
 
 export const attributes = `id, #text, #type, #name, #location, #email, host, description,
  startDate, endDate, sender, createdAt, positionTop, photo, imgUrl, thumbnailUrl,
- theme, privacy, nickname, username, picture, category, reply, replyTo, originalMessage, attending`;
+ theme, privacy, nickname, username, picture, category, reply, replyTo, originalMessage, attending, eventId`;
 export const attributeNames = {
   '#text': 'text',
   '#type': 'type',
