@@ -27,8 +27,8 @@ export const sendEmail = async (
         Data: message.subject,
       },
     },
-    ReturnPath: 'info@eventfully.se',
-    Source: 'info@eventfully.se',
+    ReturnPath: 'eventfully@eventfully.se',
+    Source: 'eventfully@eventfully.se',
   };
 
   return await ses.sendEmail(params).promise();

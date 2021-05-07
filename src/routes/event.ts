@@ -17,7 +17,10 @@ router
     async (ctx) => await ctrl.upload(ctx, ctx.params.id, ctx.file),
   )
   .post('/guest/:id', async (ctx) => await ctrl.addGuest(ctx, ctx.state.user.sub, ctx.params.id))
-  .put('/:id', async (ctx) => await ctrl.update(ctx, ctx.params.id, ctx.request.body))
+  .put(
+    '/:id',
+    async (ctx) => await ctrl.update(ctx, ctx.state.user.sub, ctx.params.id, ctx.request.body),
+  )
   .delete(
     '/guest/:id',
     async (ctx) => await ctrl.removeGuest(ctx, ctx.state.user.sub, ctx.params.id),

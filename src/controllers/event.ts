@@ -45,11 +45,13 @@ export class EventController {
       return response(
         ctx,
         StatusCodes.OK,
-        events.filter(
-          (event) =>
-            event.privacy === Privacy.PUBLIC ||
-            userEvents.map((userEvent) => userEvent.id).includes(event.id),
-        ),
+        events
+          .filter(
+            (event) =>
+              event.privacy === Privacy.PUBLIC ||
+              userEvents.map((userEvent) => userEvent.id).includes(event.id),
+          )
+          .sort((x, y) => x.startDate - y.startDate),
       );
     } catch (error) {
       return errorResponse(ctx, error.statusCode);
@@ -103,7 +105,7 @@ export class EventController {
       };
 
       if (body.invites.length > 0) {
-        await ses.sendEmail(body.invites, generateInvitationEmail(username, { id, ...body.event }));
+        await this.sendEmail(id, body.event, body.invites, username);
       }
 
       await db.put(params as PutItemInput);
@@ -115,7 +117,13 @@ export class EventController {
     }
   }
 
-  async update(ctx: Context, id: string, body: { event: Event; invites: string[] }) {
+  async update(
+    ctx: Context,
+    userId: string,
+    id: string,
+    body: { event: Event; invites: string[] },
+  ) {
+    const { username } = await auth0.getUser(userId);
     const {
       name,
       startDate,
@@ -157,6 +165,10 @@ export class EventController {
       };
 
       await db.update(params as UpdateItemInput);
+
+      if (body.invites.length > 0) {
+        await this.sendEmail(id, body.event, body.invites, username);
+      }
 
       return response(ctx, StatusCodes.OK, body.event);
     } catch (error) {
@@ -297,5 +309,9 @@ export class EventController {
         ':attending': action === Action.ADD ? event.attending + 1 : event.attending - 1,
       }) as UpdateItemInput,
     );
+  }
+
+  async sendEmail(id: string, event: Event, invites: string[], sender: string) {
+    await ses.sendEmail(invites, generateInvitationEmail(sender, { id, ...event }));
   }
 }
